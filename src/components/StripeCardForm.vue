@@ -156,41 +156,28 @@ export default defineComponent({
           stripeAccount: this.config.gateway.external_gateway_id,
         });
 
-        // Create Elements instance
+        // Create Elements instance (matching loopit-frontend configuration)
         this.elements = this.stripe.elements({
           mode: 'setup',
           currency: this.config.currency.code.toLowerCase(),
-          paymentMethodTypes: ['card'],
+          paymentMethodTypes: [this.config.payment_method_type.type.toLowerCase()],
           setupFutureUsage: 'off_session',
           appearance: {
             theme: 'flat',
             labels: 'floating',
             variables: {
-              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
               fontSizeBase: '14px',
-              fontLineHeight: '1.5',
-              colorBackground: '#f9fafb',
-              colorText: '#1f2937',
-              colorDanger: '#dc2626',
-              borderRadius: '6px',
-              spacingUnit: '4px',
+              fontLineHeight: '1',
+              colorBackground: '#F6F8FA',
             },
             rules: {
               '.Block': {
                 backgroundColor: 'var(--colorBackground)',
                 boxShadow: 'none',
-                padding: '12px',
+                padding: '9px',
               },
               '.Input': {
-                padding: '12px',
-                border: '1px solid #d1d5db',
-              },
-              '.Input:focus': {
-                borderColor: '#3b82f6',
-                boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
-              },
-              '.Label': {
-                fontWeight: '500',
+                padding: '9px',
               },
             },
           },
