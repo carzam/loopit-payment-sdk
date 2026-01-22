@@ -13,6 +13,16 @@ Vue.js SDK for managing payment methods in Laravel Blade templates. Supports Str
 
 ### Via Script Tag (Recommended for Laravel Blade)
 
+Copy the built files from `dist/` to your Laravel `public/` folder:
+
+```bash
+# Copy SDK files to Laravel public folder
+cp dist/loopit-payment-method.umd.js /path/to/laravel/public/js/
+cp dist/loopit-payment-method.css /path/to/laravel/public/css/
+```
+
+Then include them in your Blade template:
+
 ```html
 <!-- Stripe.js (required) -->
 <script src="https://js.stripe.com/v3/"></script>
@@ -20,12 +30,6 @@ Vue.js SDK for managing payment methods in Laravel Blade templates. Supports Str
 <!-- Loopit Payment Method SDK -->
 <link rel="stylesheet" href="/css/loopit-payment-method.css">
 <script src="/js/loopit-payment-method.umd.js"></script>
-```
-
-### Via NPM (for bundled projects)
-
-```bash
-npm install loopit-payment-method-sdk
 ```
 
 ## Quick Start (Laravel Blade)
@@ -53,6 +57,7 @@ npm install loopit-payment-method-sdk
 LoopitPaymentMethod.mount('#loopit-payment-method', {
     apiBaseUrl: '{{ config("services.loopit.url") }}',
     workspace: '{{ config("services.loopit.workspace") }}',
+    microsite: '{{ config("services.loopit.microsite") }}',
     ownerId: '{{ $owner->id }}',
     ownerType: '{{ $ownerType }}',
 
@@ -78,9 +83,10 @@ LoopitPaymentMethod.mount('#loopit-payment-method', {
 
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
-| `apiBaseUrl` | `string` | Yes | Base URL for the Loopit API |
-| `workspace` | `string` | Yes | Workspace identifier |
-| `ownerId` | `string` | Yes | Owner ID (person or company) |
+| `apiBaseUrl` | `string` | Yes | Base URL for the Loopit API (e.g., `https://api.loopit.io/api/portal`) |
+| `workspace` | `string` | Yes | Workspace slug identifier |
+| `microsite` | `string` | Yes | Microsite domain (e.g., `your-workspace.myloopit.com`) |
+| `ownerId` | `string` | Yes | UUID of the person or company |
 | `ownerType` | `string` | Yes | `'person'` or `'company'` |
 | `onPaymentMethodAdded` | `function` | No | Callback when payment method is added |
 | `onPaymentMethodRemoved` | `function` | No | Callback when payment method is removed |
