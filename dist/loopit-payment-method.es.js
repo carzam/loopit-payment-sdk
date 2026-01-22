@@ -6297,7 +6297,7 @@ const uf = /* @__PURE__ */ Gn(rf, [["render", af]]), ff = {
    * @example
    * ```javascript
    * const sdk = LoopitPaymentMethod.mount('#payment-container', {
-   *   apiBaseUrl: 'https://api.loopit.io/api/portal',
+   *   apiBaseUrl: 'https://platform.api.loopit.co/api/portal',
    *   workspace: 'my-workspace',
    *   ownerId: '123',
    *   ownerType: 'person',

@@ -10,7 +10,7 @@
  * Options for mounting the SDK
  */
 export interface LoopitPaymentMethodOptions {
-  /** Base URL for the Loopit API (e.g., 'https://api.loopit.io/api/portal') */
+  /** Base URL for the Loopit API (e.g., 'https://platform.api.loopit.co/api/portal') */
   apiBaseUrl: string;
   /** Workspace identifier/slug */
   workspace: string;

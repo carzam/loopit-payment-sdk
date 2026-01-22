@@ -58,7 +58,7 @@ LoopitPaymentMethod.mount('#loopit-payment-method', {
     apiBaseUrl: '{{ config("services.loopit.url") }}',
     workspace: '{{ config("services.loopit.workspace") }}',
     microsite: '{{ config("services.loopit.microsite") }}',
-    ownerId: '{{ $owner->id }}',
+    ownerId: '{{ $ownerId }}',
     ownerType: '{{ $ownerType }}',
 
     onPaymentMethodAdded: function(paymentMethod) {
@@ -83,7 +83,7 @@ LoopitPaymentMethod.mount('#loopit-payment-method', {
 
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
-| `apiBaseUrl` | `string` | Yes | Base URL for the Loopit API (e.g., `https://api.loopit.io/api/portal`) |
+| `apiBaseUrl` | `string` | Yes | Base URL for the Loopit API (e.g., `https://platform.api.loopit.co/api/portal`) |
 | `workspace` | `string` | Yes | Workspace slug identifier |
 | `microsite` | `string` | Yes | Microsite domain (e.g., `your-workspace.myloopit.com`) |
 | `ownerId` | `string` | Yes | UUID of the person or company |
