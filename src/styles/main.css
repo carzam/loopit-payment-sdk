@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom keyframe animation for spinner */
+@keyframes lp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animation utility */
+.lp-animate-spin {
+  animation: lp-spin 0.8s linear infinite;
+}
