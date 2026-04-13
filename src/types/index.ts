@@ -22,8 +22,16 @@ export interface LoopitPaymentMethodOptions {
   ownerType: OwnerType;
   /** Optional currency code (default: 'aud') */
   currencyCode?: string;
+  /**
+   * Restrict which payment method types to show.
+   * If omitted, all types configured for the workspace are shown.
+   * Example: ['card'] — card only. ['au_becs_debit'] — BECS only. ['card', 'au_becs_debit'] — both.
+   */
+  paymentMethodTypes?: Array<'card' | 'au_becs_debit'>;
   /** Optional custom labels for UI text */
   labels?: LoopitLabels;
+  /** Callback fired once the payment config is fetched, exposing the resolved payment method type */
+  onConfigLoaded?: (config: PaymentConfigResponse) => void;
   /** Callback when payment method is successfully added */
   onPaymentMethodAdded?: (paymentMethod: PaymentMethod) => void;
   /** Callback when payment method is removed */
@@ -45,6 +53,7 @@ export interface LoopitLabels {
   remove?: string;
   cardholderName?: string;
   saveCard?: string;
+  saveDirectDebit?: string;
   loading?: string;
   saving?: string;
 }
@@ -70,9 +79,7 @@ export interface AddPaymentMethodRequest {
   owner_type: OwnerType;
   config_id: number;
   external_payment_method_id: string;
-  data: {
-    cardholder_name: string;
-  };
+  data: { cardholder_name?: string } | null;
 }
 
 // ============================================================================
@@ -80,7 +87,8 @@ export interface AddPaymentMethodRequest {
 // ============================================================================
 
 /**
- * Response from GET /payment/config
+ * Response from GET /payment/configs.
+ * The API returns snake_case keys (payment_method_type).
  */
 export interface PaymentConfigResponse {
   id: number;
@@ -117,8 +125,8 @@ export interface Currency {
  */
 export interface PaymentMethodType {
   id: number;
-  /** Payment method type (only 'card' supported) */
-  type: 'card' | string;
+  /** Payment method type ('card', 'au_becs_debit', etc.) */
+  type: 'card' | 'au_becs_debit' | string;
   name: string;
 }
 
@@ -146,6 +154,8 @@ export interface StripeSetupIntent {
  */
 export interface PaymentMethod {
   id: string | number;
+  /** Payment method type ('card', 'au_becs_debit', etc.) */
+  type?: 'card' | 'au_becs_debit' | string;
   brand: CardBrand;
   last_4: string;
   cardholder_name?: string;

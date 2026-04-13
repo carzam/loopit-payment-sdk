@@ -1,13 +1,15 @@
 # Loopit Payment Method SDK
 
-Vue.js SDK for managing payment methods in Laravel Blade templates. Supports Stripe card payments only.
+Vue.js SDK for managing payment methods in Laravel Blade templates. Supports **Stripe card** and **AU BECS Direct Debit** (`au_becs_debit`) payments. The payment method type is driven by your workspace gateway configuration — the SDK automatically renders the correct form.
 
 ## Features
 
-- **Add a payment method** - Stripe card form with cardholder name
-- **Display selected payment method** - Shows card brand image, last 4 digits
-- **Remove payment method** - Clear selection
-- **Returns payment_method_id** - For separate payment collection
+- **Add a payment method** — card or AU BECS Direct Debit (driven by workspace config)
+- **Dynamic type selector** — when multiple types are configured, a tab selector is shown automatically
+- **`paymentMethodTypes` option** — restrict which types the integrator wants to show
+- **Display selected payment method** — card brand image/last 4, or Direct Debit icon/account last 4
+- **Remove payment method** — clear selection
+- **Returns `payment_method_id`** — for separate payment collection
 
 ## Installation
 
@@ -16,7 +18,6 @@ Vue.js SDK for managing payment methods in Laravel Blade templates. Supports Str
 Copy the built files from `dist/` to your Laravel `public/` folder:
 
 ```bash
-# Copy SDK files to Laravel public folder
 cp dist/loopit-payment-method.umd.js /path/to/laravel/public/js/
 cp dist/loopit-payment-method.css /path/to/laravel/public/css/
 ```
@@ -43,7 +44,6 @@ Then include them in your Blade template:
 
 <form id="checkout-form">
     <input type="hidden" name="payment_method_id" id="payment_method_id">
-    <!-- billing address fields -->
     <button type="submit" id="submit-btn" disabled>Complete Booking</button>
 </form>
 @endsection
@@ -56,10 +56,16 @@ Then include them in your Blade template:
 <script>
 LoopitPaymentMethod.mount('#loopit-payment-method', {
     apiBaseUrl: '{{ config("services.loopit.url") }}',
-    workspace: '{{ config("services.loopit.workspace") }}',
-    microsite: '{{ config("services.loopit.microsite") }}',
-    ownerId: '{{ $ownerId }}',
-    ownerType: '{{ $ownerType }}',
+    workspace:  '{{ config("services.loopit.workspace") }}',
+    microsite:  '{{ config("services.loopit.microsite") }}',
+    ownerId:    '{{ $ownerId }}',
+    ownerType:  '{{ $ownerType }}',
+
+    // Optional: restrict which payment types to show.
+    // Omit to show all types configured for the workspace.
+    // paymentMethodTypes: ['card'],
+    // paymentMethodTypes: ['au_becs_debit'],
+    // paymentMethodTypes: ['card', 'au_becs_debit'],
 
     onPaymentMethodAdded: function(paymentMethod) {
         document.getElementById('payment_method_id').value = paymentMethod.id;
@@ -88,26 +94,75 @@ LoopitPaymentMethod.mount('#loopit-payment-method', {
 | `microsite` | `string` | Yes | Microsite domain (e.g., `your-workspace.myloopit.com`) |
 | `ownerId` | `string` | Yes | UUID of the person or company |
 | `ownerType` | `string` | Yes | `'person'` or `'company'` |
-| `onPaymentMethodAdded` | `function` | No | Callback when payment method is added |
+| `paymentMethodTypes` | `string[]` | No | Restrict which types to show: `['card']`, `['au_becs_debit']`, or `['card', 'au_becs_debit']`. Omit to show all types configured for the workspace. |
+| `onConfigLoaded` | `function` | No | Fired once the payment config is resolved. Receives the config object including `payment_method_type.type` |
+| `onPaymentMethodAdded` | `function` | No | Callback when payment method is successfully added. Receives a `PaymentMethod` object |
 | `onPaymentMethodRemoved` | `function` | No | Callback when payment method is removed |
 | `onError` | `function` | No | Callback when an error occurs |
 
+## Payment Method Types
+
+The SDK reads available payment types from `GET /payment/configs` and renders accordingly:
+
+| Type | Form behaviour |
+|------|----------------|
+| `card` | Cardholder name field + Stripe card fields. Button: **Save Card** |
+| `au_becs_debit` | Stripe BECS fields (BSB + account number). Button: **Set up Direct Debit** |
+
+When a workspace has **both** types configured (and `paymentMethodTypes` includes both), a tab selector is shown automatically — no extra code needed.
+
 ## Callbacks
 
-### onPaymentMethodAdded(paymentMethod)
+### `onConfigLoaded(config)`
+
+Fired as soon as the payment config is fetched from the API. Use this to know which payment type(s) are available before the user interacts.
+
+```javascript
+onConfigLoaded: function(config) {
+    console.log('Payment type:', config.payment_method_type.type);
+    // 'card' or 'au_becs_debit'
+}
+```
+
+### `onPaymentMethodAdded(paymentMethod)`
 
 Called when a payment method is successfully added.
 
 ```javascript
 onPaymentMethodAdded: function(paymentMethod) {
-    console.log('ID:', paymentMethod.id);
+    console.log('ID:',    paymentMethod.id);
+    console.log('Type:',  paymentMethod.type);    // 'card' or 'au_becs_debit'
     console.log('Brand:', paymentMethod.brand);
     console.log('Last 4:', paymentMethod.last_4);
-    console.log('Expires:', paymentMethod.expires);
+    // Card only:
+    console.log('Expires:', paymentMethod.exp_month + '/' + paymentMethod.exp_year);
 }
 ```
 
-### onPaymentMethodRemoved()
+**Card response example:**
+```json
+{
+    "id": "pm_123456789",
+    "type": "card",
+    "brand": "visa",
+    "last_4": "4242",
+    "cardholder_name": "John Doe",
+    "exp_month": 12,
+    "exp_year": 2025
+}
+```
+
+**AU BECS Direct Debit response example:**
+```json
+{
+    "id": "pm_987654321",
+    "type": "au_becs_debit",
+    "brand": "au_becs_debit",
+    "last_4": "0001"
+}
+```
+
+### `onPaymentMethodRemoved()`
 
 Called when the payment method is removed.
 
@@ -117,7 +172,7 @@ onPaymentMethodRemoved: function() {
 }
 ```
 
-### onError(error)
+### `onError(error)`
 
 Called when an error occurs.
 
@@ -129,13 +184,11 @@ onError: function(error) {
 
 ## API Endpoints
 
-The SDK uses these Loopit API endpoints:
-
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/payment/config` | GET | Get Stripe publishable key |
-| `/payment-methods/setup-config` | POST | Get Stripe SetupIntent |
-| `/payment-methods/add` | POST | Save payment method |
+| `/payment/configs` | GET | Get all payment configs for the workspace (card, au_becs_debit, etc.) |
+| `/payment-methods/setup-config` | POST | Get Stripe SetupIntent client secret |
+| `/payment-methods/add` | POST | Save payment method to Loopit |
 
 ## Building from Source
 
@@ -154,10 +207,16 @@ pnpm build
 
 ```
 dist/
-├── loopit-payment-method.umd.js   # UMD bundle (for script tag)
+├── loopit-payment-method.umd.js   # UMD bundle (for script tag / browser)
 ├── loopit-payment-method.es.js    # ES module bundle
 └── loopit-payment-method.css      # Styles
 ```
+
+## Requirements
+
+- Stripe.js must be loaded before the SDK (`https://js.stripe.com/v3/`)
+- Valid Loopit API credentials
+- Workspace configured with at least one Stripe payment method (card or AU BECS Direct Debit)
 
 ## Browser Support
 
@@ -165,12 +224,6 @@ dist/
 - Firefox (latest)
 - Safari (latest)
 - Edge (latest)
-
-## Requirements
-
-- Stripe.js must be loaded before the SDK
-- Valid Loopit API credentials
-- Stripe card payment configuration in Loopit
 
 ## License
 
