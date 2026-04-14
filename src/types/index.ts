@@ -149,8 +149,9 @@ export interface StripeSetupIntent {
 }
 
 /**
- * Response from POST /payment-methods/add
- * Also used as the internal PaymentMethod representation
+ * Response from POST /payment-methods/add — Loopit API shape.
+ * Note: expiry is returned as a full ISO datetime string in `expires`,
+ * not as separate exp_month/exp_year fields.
  */
 export interface PaymentMethod {
   id: string | number;
@@ -159,8 +160,11 @@ export interface PaymentMethod {
   brand: CardBrand;
   last_4: string;
   cardholder_name?: string;
-  exp_month?: number;
-  exp_year?: number;
+  /** ISO datetime string e.g. '2031-03-31T23:59:59.000000Z' — card only */
+  expires?: string;
+  owner_id?: string;
+  owner_type?: string;
+  payment_config?: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
 }

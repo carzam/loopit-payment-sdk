@@ -130,25 +130,26 @@ Called when a payment method is successfully added.
 
 ```javascript
 onPaymentMethodAdded: function(paymentMethod) {
-    console.log('ID:',    paymentMethod.id);
-    console.log('Type:',  paymentMethod.type);    // 'card' or 'au_becs_debit'
-    console.log('Brand:', paymentMethod.brand);
-    console.log('Last 4:', paymentMethod.last_4);
+    console.log('ID:',      paymentMethod.id);
+    console.log('Type:',    paymentMethod.type);    // 'card' or 'au_becs_debit'
+    console.log('Brand:',   paymentMethod.brand);
+    console.log('Last 4:',  paymentMethod.last_4);
     // Card only:
-    console.log('Expires:', paymentMethod.exp_month + '/' + paymentMethod.exp_year);
+    console.log('Expires:', paymentMethod.expires); // e.g. '2031-03-31T23:59:59.000000Z'
 }
 ```
 
 **Card response example:**
 ```json
 {
-    "id": "pm_123456789",
+    "id": "a189ce66-5d52-454e-b412-472450cde11c",
     "type": "card",
-    "brand": "visa",
-    "last_4": "4242",
+    "brand": "mastercard",
+    "last_4": "4444",
     "cardholder_name": "John Doe",
-    "exp_month": 12,
-    "exp_year": 2025
+    "expires": "2031-03-31T23:59:59.000000Z",
+    "owner_id": "a0c29b4e-3903-472c-aadb-05c4a7420103",
+    "owner_type": "person"
 }
 ```
 
