@@ -4,10 +4,16 @@
       <img
         v-if="brandImage"
         :src="brandImage"
-        :alt="paymentMethod.brand"
+        :alt="displayLabel"
         class="lp-w-12 lp-h-8 lp-object-contain lp-rounded"
       />
-      <span class="lp-text-base lp-text-gray-800">
+      <!-- BECS direct debit display -->
+      <span v-if="isBecsDebit" class="lp-text-base lp-text-gray-800">
+        Direct Debit ••••
+        <span class="lp-font-semibold">{{ paymentMethod.last_4 }}</span>
+      </span>
+      <!-- Card display -->
+      <span v-else class="lp-text-base lp-text-gray-800">
         <span class="lp-capitalize">{{ capitalizedBrand }}</span>
         ending in
         <span class="lp-font-semibold">{{ paymentMethod.last_4 }}</span>
@@ -30,15 +36,14 @@ import type { PaymentMethod } from '../types';
 
 /**
  * Payment Method Display component
- * Shows the selected payment method with brand image and last 4 digits
+ * Shows the selected payment method with brand image and last 4 digits.
+ * Handles both card and au_becs_debit display formats.
  */
 export default defineComponent({
   name: 'PaymentMethodDisplay',
 
   props: {
-    /**
-     * The payment method to display
-     */
+    /** The payment method to display */
     paymentMethod: {
       type: Object as PropType<PaymentMethod>,
       required: true,
@@ -46,23 +51,34 @@ export default defineComponent({
   },
 
   emits: {
-    /**
-     * Emitted when user clicks remove button
-     */
+    /** Emitted when user clicks remove button */
     remove: () => true,
   },
 
   computed: {
-    /**
-     * Get the brand image URL for the payment method
-     */
-    brandImage(): string | null {
-      return getBrandImage(this.paymentMethod.brand);
+    /** True when the payment method is BECS direct debit */
+    isBecsDebit(): boolean {
+      return this.paymentMethod.type === 'au_becs_debit';
     },
 
-    /**
-     * Get the capitalized brand name
-     */
+    /** Brand key to look up image — use type for BECS, brand for cards */
+    brandKey(): string {
+      if (this.isBecsDebit) return 'au_becs_debit';
+      return this.paymentMethod.brand || '';
+    },
+
+    /** Get the brand image URL for the payment method */
+    brandImage(): string | null {
+      return getBrandImage(this.brandKey);
+    },
+
+    /** Accessible label for the brand image */
+    displayLabel(): string {
+      if (this.isBecsDebit) return 'Direct Debit';
+      return this.paymentMethod.brand || 'Card';
+    },
+
+    /** Capitalized brand name for card display */
     capitalizedBrand(): string {
       const brand = this.paymentMethod.brand || 'Card';
       return brand.charAt(0).toUpperCase() + brand.slice(1);

@@ -2,18 +2,26 @@
  * Loopit Payment Method SDK - API Client
  *
  * Handles all API communication with Loopit backend.
- * Only supports Stripe card payments.
+ * Supports Stripe card and au_becs_debit payments.
  */
 
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
 import type {
   PaymentConfigResponse,
+  PaymentMethodType,
   SetupConfigRequest,
   SetupConfigResponse,
   AddPaymentMethodRequest,
   PaymentMethod,
   ApiErrorResponse,
 } from '../types';
+
+/**
+ * Read the payment_method_type from a config response.
+ */
+export function getPaymentMethodType(config: PaymentConfigResponse): PaymentMethodType | undefined {
+  return config.payment_method_type;
+}
 
 /**
  * API Client for Loopit Payment Method SDK
@@ -58,28 +66,30 @@ export class ApiClient {
   }
 
   /**
-   * GET /payment/config
-   * Get payment configuration (Stripe keys)
-   * @returns Promise resolving to payment config
-   * @throws Error if provider is not Stripe or payment type is not card
+   * GET /payment/configs
+   * Get all payment configurations for the workspace (card, au_becs_debit, etc.)
+   * Returns an array — one entry per supported payment method type.
+   * Excludes us_bank_account and other unsupported types.
+   * @throws Error if no supported Stripe configs are found
    */
-  async getPaymentConfig(): Promise<PaymentConfigResponse> {
-    const config = await this.request<PaymentConfigResponse>({
+  async getPaymentConfigs(): Promise<PaymentConfigResponse[]> {
+    const configs = await this.request<PaymentConfigResponse[]>({
       method: 'GET',
-      url: '/payment/config',
+      url: '/payment/configs',
     });
 
-    // Validate: Only Stripe is supported
-    if (config.gateway?.provider !== 'stripe') {
-      throw new Error('Only Stripe payment provider is supported');
+    const supported = ['card', 'au_becs_debit'];
+
+    const filtered = configs.filter(cfg => {
+      const pmt = getPaymentMethodType(cfg);
+      return cfg.gateway?.provider === 'stripe' && supported.includes(pmt?.type?.toLowerCase() ?? '');
+    });
+
+    if (filtered.length === 0) {
+      throw new Error('No supported payment methods are configured for this workspace');
     }
 
-    // Validate: Only card payments are supported
-    if (config.payment_method_type?.type?.toLowerCase() !== 'card') {
-      throw new Error('Only card payments are supported');
-    }
-
-    return config;
+    return filtered;
   }
 
   /**

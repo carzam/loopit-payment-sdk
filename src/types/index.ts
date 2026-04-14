@@ -22,8 +22,16 @@ export interface LoopitPaymentMethodOptions {
   ownerType: OwnerType;
   /** Optional currency code (default: 'aud') */
   currencyCode?: string;
+  /**
+   * Restrict which payment method types to show.
+   * If omitted, all types configured for the workspace are shown.
+   * Example: ['card'] — card only. ['au_becs_debit'] — BECS only. ['card', 'au_becs_debit'] — both.
+   */
+  paymentMethodTypes?: Array<'card' | 'au_becs_debit'>;
   /** Optional custom labels for UI text */
   labels?: LoopitLabels;
+  /** Callback fired once the payment config is fetched, exposing the resolved payment method type */
+  onConfigLoaded?: (config: PaymentConfigResponse) => void;
   /** Callback when payment method is successfully added */
   onPaymentMethodAdded?: (paymentMethod: PaymentMethod) => void;
   /** Callback when payment method is removed */
@@ -45,6 +53,7 @@ export interface LoopitLabels {
   remove?: string;
   cardholderName?: string;
   saveCard?: string;
+  saveDirectDebit?: string;
   loading?: string;
   saving?: string;
 }
@@ -70,9 +79,7 @@ export interface AddPaymentMethodRequest {
   owner_type: OwnerType;
   config_id: number;
   external_payment_method_id: string;
-  data: {
-    cardholder_name: string;
-  };
+  data: { cardholder_name?: string } | null;
 }
 
 // ============================================================================
@@ -80,7 +87,8 @@ export interface AddPaymentMethodRequest {
 // ============================================================================
 
 /**
- * Response from GET /payment/config
+ * Response from GET /payment/configs.
+ * The API returns snake_case keys (payment_method_type).
  */
 export interface PaymentConfigResponse {
   id: number;
@@ -117,8 +125,8 @@ export interface Currency {
  */
 export interface PaymentMethodType {
   id: number;
-  /** Payment method type (only 'card' supported) */
-  type: 'card' | string;
+  /** Payment method type ('card', 'au_becs_debit', etc.) */
+  type: 'card' | 'au_becs_debit' | string;
   name: string;
 }
 
@@ -141,18 +149,34 @@ export interface StripeSetupIntent {
 }
 
 /**
- * Response from POST /payment-methods/add
- * Also used as the internal PaymentMethod representation
+ * Response from POST /payment-methods/add — Loopit API shape.
  */
 export interface PaymentMethod {
-  id: string | number;
+  id: string;
+  /** Payment method type ('card', 'au_becs_debit', etc.) */
+  type?: 'card' | 'au_becs_debit' | string;
   brand: CardBrand;
   last_4: string;
-  cardholder_name?: string;
-  exp_month?: number;
-  exp_year?: number;
+  full_name?: string | null;
+  cardholder_name?: string | null;
+  /** ISO datetime string e.g. '2031-03-31T23:59:59.000000Z' — card only, null for BECS */
+  expires?: string | null;
+  external_id?: string | null;
+  external_customer_id?: string | null;
+  is_default?: number | boolean;
+  has_active_bookings?: boolean;
+  is_migration_incomplete?: boolean;
+  owner_id?: string;
+  owner_type?: string;
+  config_id?: string;
+  gateway_id?: string;
+  workspace_id?: string;
+  payment_config?: Record<string, unknown>;
+  gateway?: Record<string, unknown>;
+  bookings?: unknown[];
   created_at?: string;
   updated_at?: string;
+  deleted_at?: string | null;
 }
 
 /**
