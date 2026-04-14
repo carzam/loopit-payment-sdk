@@ -156,10 +156,16 @@ onPaymentMethodAdded: function(paymentMethod) {
 **AU BECS Direct Debit response example:**
 ```json
 {
-    "id": "pm_987654321",
+    "id": "b3f1a2c4-9e87-4d56-bc12-7a3f1e8d2c90",
     "type": "au_becs_debit",
     "brand": "au_becs_debit",
-    "last_4": "0001"
+    "last_4": "032173...4383",
+    "full_name": "Jane Smith",
+    "expires": null,
+    "external_id": "pm_1StyuOFQXEoapWu0eLvXhu9o",
+    "is_default": 1,
+    "owner_id": "a0e6eb88-6082-436a-9cb3-4bd03a606526",
+    "owner_type": "company"
 }
 ```
 

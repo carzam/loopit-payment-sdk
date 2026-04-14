@@ -150,23 +150,33 @@ export interface StripeSetupIntent {
 
 /**
  * Response from POST /payment-methods/add — Loopit API shape.
- * Note: expiry is returned as a full ISO datetime string in `expires`,
- * not as separate exp_month/exp_year fields.
  */
 export interface PaymentMethod {
-  id: string | number;
+  id: string;
   /** Payment method type ('card', 'au_becs_debit', etc.) */
   type?: 'card' | 'au_becs_debit' | string;
   brand: CardBrand;
   last_4: string;
-  cardholder_name?: string;
-  /** ISO datetime string e.g. '2031-03-31T23:59:59.000000Z' — card only */
-  expires?: string;
+  full_name?: string | null;
+  cardholder_name?: string | null;
+  /** ISO datetime string e.g. '2031-03-31T23:59:59.000000Z' — card only, null for BECS */
+  expires?: string | null;
+  external_id?: string | null;
+  external_customer_id?: string | null;
+  is_default?: number | boolean;
+  has_active_bookings?: boolean;
+  is_migration_incomplete?: boolean;
   owner_id?: string;
   owner_type?: string;
+  config_id?: string;
+  gateway_id?: string;
+  workspace_id?: string;
   payment_config?: Record<string, unknown>;
+  gateway?: Record<string, unknown>;
+  bookings?: unknown[];
   created_at?: string;
   updated_at?: string;
+  deleted_at?: string | null;
 }
 
 /**
